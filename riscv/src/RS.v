@@ -13,10 +13,6 @@ module RS(
     input  wire                     LSB_flag_in,
     input  wire [31:0]              LSB_val_in,
     input  wire [`ROB_INDEX_RANGE]  LSB_to_ROB_in,
-//CDB
-    output reg                      CDB_flag_out,
-    output reg  [31:0]              CDB_val_out,
-    output reg  [`ROB_INDEX_RANGE]  CDB_to_ROB_out,
 //decoder
     input  wire         Dec_inst_flag_in,
     input  wire [5:0]   Dec_inst,
@@ -27,6 +23,10 @@ module RS(
     input  wire [31:0]  Dec_imm,
 //ROB
     input  wire [`ROB_INDEX_RANGE]  ROB_idx_in,
+//for all
+    output reg                      flag_out,
+    output reg  [31:0]              val_out,
+    output reg  [`ROB_INDEX_RANGE]  to_ROB_out,
 );
     reg [5:0]              inst[`RS_INDEX];
     reg [`RS_INDEX]        busy;
@@ -57,42 +57,42 @@ module RS(
 
     always @(*) begin
         if (calc_RS_idx != 0) begin
-            CDB_flag_out = `TRUE;
-            CDB_to_ROB_out = dest;
+            flag_out = `TRUE;
+            to_ROB_out = dest;
             case (alu_inst)
-                `ADD   : CDB_val_out = alu_vj + alu_vk;
-                `ADDI  : CDB_val_out = alu_vj + alu_vk;
-                `SUB   : CDB_val_out = alu_vj - alu_vk;
-                `XOR   : CDB_val_out = alu_vj ^ alu_vk;
-                `XORI  : CDB_val_out = alu_vj ^ alu_vk;
-                `OR    : CDB_val_out = alu_vj | alu_vk;
-                `ORI   : CDB_val_out = alu_vj | alu_vk;
-                `AND   : CDB_val_out = alu_vj & alu_vk;
-                `ANDI  : CDB_val_out = alu_vj & alu_vk;
-                `SLL   : CDB_val_out = alu_vj << alu_vk[4:0];
-                `SLLI  : CDB_val_out = alu_vj << alu_vk[4:0];
-                `SRL   : CDB_val_out = alu_vj >> alu_vk[4:0];
-                `SRLI  : CDB_val_out = alu_vj >> alu_vk[4:0];
-                `SRA   : CDB_val_out = $signed(alu_vj) >> alu_vk[4:0];
-                `SRAI  : CDB_val_out = $signed(alu_vj) >> alu_vk[4:0];
-                `SLT   : CDB_val_out = $signed(alu_vj) < $signed(alu_vk);
-                `SLTI  : CDB_val_out = $signed(alu_vj) < $signed(alu_vk);
-                `SLTU  : CDB_val_out = alu_vj < alu_vk;
-                `SLTIU : CDB_val_out = alu_vj < alu_vk;
-                `BEQ   : CDB_val_out = alu_vj == alu_vk;
-                `BNE   : CDB_val_out = alu_vj != alu_vk;
-                `BLT   : CDB_val_out = $signed(alu_vj) < $signed(alu_vk);
-                `BGE   : CDB_val_out = $signed(alu_vj) >= $signed(alu_vk);
-                `BLTU  : CDB_val_out = alu_vj < alu_vk;
-                `BGEU  : CDB_val_out = alu_vj >= alu_vk;
-                `JALR  : CDB_val_out = (alu_vj + alu_vk) & ~(32'b1);
-                default: CDB_val_out = `ZERO32;
+                `ADD   : val_out = alu_vj + alu_vk;
+                `ADDI  : val_out = alu_vj + alu_vk;
+                `SUB   : val_out = alu_vj - alu_vk;
+                `XOR   : val_out = alu_vj ^ alu_vk;
+                `XORI  : val_out = alu_vj ^ alu_vk;
+                `OR    : val_out = alu_vj | alu_vk;
+                `ORI   : val_out = alu_vj | alu_vk;
+                `AND   : val_out = alu_vj & alu_vk;
+                `ANDI  : val_out = alu_vj & alu_vk;
+                `SLL   : val_out = alu_vj << alu_vk[4:0];
+                `SLLI  : val_out = alu_vj << alu_vk[4:0];
+                `SRL   : val_out = alu_vj >> alu_vk[4:0];
+                `SRLI  : val_out = alu_vj >> alu_vk[4:0];
+                `SRA   : val_out = $signed(alu_vj) >> alu_vk[4:0];
+                `SRAI  : val_out = $signed(alu_vj) >> alu_vk[4:0];
+                `SLT   : val_out = $signed(alu_vj) < $signed(alu_vk);
+                `SLTI  : val_out = $signed(alu_vj) < $signed(alu_vk);
+                `SLTU  : val_out = alu_vj < alu_vk;
+                `SLTIU : val_out = alu_vj < alu_vk;
+                `BEQ   : val_out = alu_vj == alu_vk;
+                `BNE   : val_out = alu_vj != alu_vk;
+                `BLT   : val_out = $signed(alu_vj) < $signed(alu_vk);
+                `BGE   : val_out = $signed(alu_vj) >= $signed(alu_vk);
+                `BLTU  : val_out = alu_vj < alu_vk;
+                `BGEU  : val_out = alu_vj >= alu_vk;
+                `JALR  : val_out = (alu_vj + alu_vk) & ~(32'b1);
+                default: val_out = `ZERO32;
             endcase
         end
         else begin
-            CDB_flag_out = `FALSE;
-            CDB_val_out = `ZERO32;
-            CDB_to_ROB_out = `ZERO4;
+            flag_out = `FALSE;
+            val_out = `ZERO32;
+            to_ROB_out = `ZERO4;
         end
     end
 

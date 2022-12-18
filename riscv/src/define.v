@@ -13,11 +13,18 @@
 `define REG_INDEX          31:0
 `define RS_INDEX_RANGE     3:0
 `define RS_INDEX           15:0
+`define BHB_INDEX_RANGE    10:2
+`define BHB_INDEX          511:0
+`define IC_INDEX_RANGE     10:2
+`define IC_INDEX           511:0
+`define IC_TAG_RANGE       17:11
 
 //size
 `define RS_SIZE     16
 `define ROB_SIZE    16
 `define REG_SIZE    32
+`define BHB_SIZE    512
+`define IC_SIZE     512
 
 //opcode
 `define NOP         6'h0

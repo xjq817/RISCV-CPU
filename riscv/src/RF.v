@@ -10,8 +10,8 @@ module RF(
     input  wire [`REG_INDEX_RANGE]  dec_rs2_in,
     output wire                     dec_rs1_flag_out,
     output wire                     dec_rs2_flag_out,
-    output wire [31: 0]             dec_rs1_out,
-    output wire [31: 0]             dec_rs2_out,
+    output wire [31:0]              dec_rs1_out,
+    output wire [31:0]              dec_rs2_out,
 //ROB
     input  wire                     ROB_new_flag_in,
     input  wire [`ROB_INDEX_RANGE]  ROB_new_idx_in,
@@ -19,7 +19,7 @@ module RF(
     input  wire                     ROB_write_flag_in,
     input  wire [`ROB_INDEX_RANGE]  ROB_write_idx_in,
     input  wire [`REG_INDEX_RANGE]  ROB_write_rd_in,
-    input  wire [31:0]              ROB_val_out,
+    input  wire [31:0]              ROB_val_in,
     output wire [`ROB_INDEX_RANGE]  ROB_rs1_idx_out,
     output wire [`ROB_INDEX_RANGE]  ROB_rs2_idx_out
 );
@@ -39,7 +39,7 @@ module RF(
             reg_status <= ~(`ZERO32);
         end else begin
             if (ROB_write_flag_in && ROB_write_rd_in) begin
-                reg_val[ROB_write_rd_in] <= ROB_val_out;
+                reg_val[ROB_write_rd_in] <= ROB_val_in;
                 if (reg_ROB_idx[ROB_write_rd_in] == ROB_write_idx_in) begin
                     reg_status[ROB_write_rd_in] <= (ROB_new_rd_in != ROB_write_rd_in);
                 end else begin

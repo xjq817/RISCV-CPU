@@ -19,9 +19,9 @@ module IF(
     input  wire [31:0]  ROB_jump_PC_in,
 );
 
-    reg [31:0] imm;
-    wire [6:0] opcode;
-    reg [31:0] PC;
+    reg  [31:0] imm;
+    wire [6:0]  opcode;
+    reg  [31:0] PC;
 
     assign opcode = IC_inst_in[6:0];
     assign Dec_inst_flag_out = IC_flag_in;
@@ -37,11 +37,29 @@ module IF(
         endcase
     end
 
+    integer i;
+    always @(posedge clk) begin
+        if (rst) begin
+            PC <= `ZERO32;
+        end else if (!rdy) begin
+        end else if (jump_wrong) begin
+            PC <= ROB_jump_PC_in;
+        end else begin
+            if (IC_flag_in && !Dec_flag_in) begin
+                case (opcode)
+                    `JALOP    : PC <= PC + imm;
+                    default   : PC <= PC + 4;
+                endcase
+            end
+        end
+
+    end
+
     always @(*) begin
         if (!IC_flag_in || Dec_flag_in) begin
             IC_PC_out = PC;
-            Dec_jump_flag_out = `FALSE;
-            Dec_jump_PC_out = `ZERO32; 
+            Dec_jump_flag_out = `TRUE;
+            Dec_jump_PC_out = PC;
         end
         else begin
             case (opcode)
@@ -57,7 +75,7 @@ module IF(
                 end
                 `JALROP: begin
                     IC_PC_out = PC + 4;
-                    Dec_jump_flag_out = `TRUE;
+                    Dec_jump_flag_out = `FALSE;
                     Dec_jump_PC_out = PC + 4;
                 end
                 `LUIOP: begin
@@ -68,23 +86,8 @@ module IF(
                 default:  begin
                     IC_PC_out = PC + 4;
                     Dec_jump_flag_out = `TRUE;
-                    Dec_jump_PC_out = PC + imm;
+                    Dec_jump_PC_out = `ZERO32;
                 end
-            endcase
-        end
-    end
-
-    integer i;
-    always @(posedge clk) begin
-        if (rst) begin
-            PC <= `ZERO32;
-        end else if (!rdy) begin
-        end else if (jump_wrong) begin
-            PC <= ROB_jump_PC_in;
-        end else if (IC_flag_in && !Dec_flag_in) begin
-            case (opcode)
-                `JALOP    : PC <= PC + imm;
-                default   : PC <= PC + 4;
             endcase
         end
     end
