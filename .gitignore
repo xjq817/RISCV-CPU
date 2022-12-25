@@ -1,4 +1,11 @@
 riscv/testspace/*
+bin
+include
+lib
+libexec
+riscv32-unknown-elf
+share
+1.tar.zst
 
 *.o
 *.vcd

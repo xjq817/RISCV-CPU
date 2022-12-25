@@ -1,179 +1,204 @@
-`include "header.v"
+`include "define.v"
 
-module ROB(
-    input  wire  clk,
-    input  wire  rst,
-    input  wire  rdy,
-    output reg   jump_wrong,
-//decoder
-    input  wire [5:0]               Dec_inst_in,
-    input  wire                     Dec_inst_flag_in,
-    input  wire                     Dec_jump_flag_in,
-    input  wire [`REG_INDEX_RANGE]  Dec_rd_in,
-    input  wire [31:0]              Dec_PC_in,
-    output wire                     Dec_ROB_full_out,
-    output wire [31:0]              Dec_rs1_out,
-    output wire                     Dec_rs1_flag_out,
-    output wire [31:0]              Dec_rs2_out,
-    output wire                     Dec_rs2_flag_out,
+module ROB (
+	input  wire 						clk,
+	input  wire 						rst,
+	input  wire 						rdy,
 //IF
-    output reg  [31:0]  IF_jump_PC_out,
-//RS
-    input  wire                     RS_flag_in,
-    input  wire [31:0]              RS_val_in,
-    input  wire [`ROB_INDEX_RANGE]  RS_ROB_idx_in,
-//LSB
-    input  wire                     LSB_flag_in,
-    input  wire [31:0]              LSB_val_in,
-    input  wire [`ROB_INDEX_RANGE]  LSB_ROB_idx_in,
+	output reg							IF_jump_flag,
+	output reg	[31:0]					IF_jump_PC,
+//decoder
+	input  wire							Dec_flag,
+//dispatch
+	input  wire							Dis_flag,
+	input  wire	[5:0]					Dis_op,
+	input  wire	[`REG_INDEX_RANGE]		Dis_rd,
+	input  wire	[31:0]					Dis_PC,
+	input  wire							Dis_flag1,
+	input  wire	[`ROB_INDEX_RANGE]		Dis_ROB_idx1,
+	input  wire 						Dis_flag2,
+	input  wire	[`ROB_INDEX_RANGE]		Dis_ROB_idx2,
+	output wire							Dis_R1,
+	output wire	[31:0]					Dis_V1,
+	output wire							Dis_R2,
+	output wire	[31:0]					Dis_V2,
+//alu
+	input  wire							ALU_flag,
+	input  wire	[`ROB_INDEX_RANGE]		ALU_ROB_idx,
+	input  wire	[31:0]					ALU_val,
+	input  wire							ALU_jump_flag,
+	input  wire	[31:0]					ALU_jump_PC,
 //RF
-    input  wire [`ROB_INDEX_RANGE]  RF_rs1_idx_in,
-    input  wire [`ROB_INDEX_RANGE]  RF_rs2_idx_in,
-    output wire                     RF_new_flag_out,
-    output wire [`ROB_INDEX_RANGE]  RF_new_idx_out,
-    output wire [`REG_INDEX_RANGE]  RF_new_rd_out,
-    output wire                     RF_write_flag_out,
-    output wire [`ROB_INDEX_RANGE]  RF_write_idx_out,
-    output wire [`REG_INDEX_RANGE]  RF_write_rd_out,
-    output wire [31:0]              RF_val_out,
+	output reg							RF_write_flag,
+	output reg	[`REG_INDEX_RANGE]		RF_rd,
+	output reg	[`ROB_INDEX_RANGE]		RF_ROB_idx,
+	output reg	[31:0]					RF_val,
+//LSB
+	input  wire 						LSB_load_flag,
+	input  wire	[`ROB_INDEX_RANGE]		LSB_load_ROB_idx,
+	input  wire	[31:0]					LSB_load_val,
+	output reg							LSB_store_flag,
+	output reg	[`ROB_INDEX_RANGE]		LSB_store_idx,
+	output reg							LSB_from_ALU_flag,
+	output reg	[`ROB_INDEX_RANGE]		LSB_from_ALU_idx,
+	output reg	[31:0]					LSB_from_ALU_val,
+	output reg 							LSB_from_LSB_flag,
+	output reg	[`ROB_INDEX_RANGE]		LSB_from_LSB_idx,
+	output reg	[31:0]					LSB_from_LSB_val,
+//ROB
+	output wire							ROB_head_flag,
+	output wire	[`ROB_INDEX_RANGE]		ROB_head,
+	output reg 							ROB_full,
+	output reg	 						ROB_roll,
+	output wire	[`ROB_INDEX_RANGE]		ROB_nex_idx
 );
 
-    reg [31:0]             val   [`ROB_INDEX];
-    reg [`REG_INDEX_RANGE] RF_idx[`ROB_INDEX];
-    reg [5:0]              inst  [`ROB_INDEX];
-    reg [`ROB_INDEX]       ready;
-    reg [`ROB_INDEX]       jump_flag;
+	reg							ready[`ROB_INDEX];
+	reg	[5:0]					op[`ROB_INDEX];
+	reg	[`REG_INDEX_RANGE]		dest[`ROB_INDEX];
+	reg	[31:0]					val[`ROB_INDEX];
+	reg	[31:0]					PC[`ROB_INDEX];
+	reg							jump_flag[`ROB_INDEX];
+	reg	[31:0]					jump_PC[`ROB_INDEX];
+	reg	[`ROB_INDEX_RANGE]		head;
+	reg	[`ROB_INDEX_RANGE]		tail;
+	reg							empty;
 
-    reg  [`ROB_INDEX_RANGE] head;
-    reg  [`ROB_INDEX_RANGE] tail;
-    wire [`ROB_INDEX_RANGE] head_next;
-    wire [`ROB_INDEX_RANGE] tail_next;
+	wire is_store = (Dis_op == `SB || Dis_op == `SW || Dis_op == `SH);
+	
+	assign ROB_head_flag = !empty;
+	assign ROB_head      = head;
+	assign ROB_nex_idx   = tail;
 
-    reg                    jalr_flag;
-    reg [`ROB_INDEX_RANGE] jalr_idx;
-    reg [31:0]             jalr_PC;
+	assign Dis_R1 = Dis_flag1 && ready[Dis_ROB_idx1];
+	assign Dis_V1 = val[Dis_ROB_idx1];
+	assign Dis_R2 = Dis_flag2 && ready[Dis_ROB_idx2];
+	assign Dis_V2 = val[Dis_ROB_idx2];
 
-    assign head_next = head == `ROB_SIZE - 1 ? 0 : head + 1;
-    assign tail_next = tail == `ROB_SIZE - 1 ? 0 : tail + 1;
+	integer i;
+	always @(posedge clk) begin
+		if (rst || ROB_roll) begin
+			head     <= 0;
+			tail     <= 0;
+			empty    <= `TRUE;
+			ROB_roll <= `FALSE;
+			for (i = 0; i < `ROB_SIZE; i = i + 1) begin
+				ready[i]     <= 0;
+				op[i]        <= 0;
+				dest[i]      <= 0;
+				val[i]       <= 0;
+				jump_flag[i] <= 0;
+				jump_PC[i]   <= 0;
+				PC[i]        <= 0;
+			end
+			IF_jump_flag      <= `FALSE;
+			RF_write_flag     <= `FALSE;
+			LSB_store_flag    <= `FALSE;
+			LSB_from_ALU_flag <= `FALSE;
+			LSB_from_LSB_flag <= `FALSE;
+		end else if (!rdy) begin
+			ROB_full          <= head == tail && (!empty);
+			ROB_roll          <= `FALSE;
+			IF_jump_flag      <= `FALSE;
+			RF_write_flag     <= `FALSE;
+			LSB_store_flag    <= `FALSE;
+			LSB_from_ALU_flag <= `FALSE;
+			LSB_from_LSB_flag <= `FALSE;
+		end else begin
+			if (head + ((!empty) && ready[head]) == tail + Dis_flag) begin
+				ROB_full <= (!empty);
+				if (!empty && ready[head] && !Dis_flag) begin
+					empty <= `TRUE;
+				end
+			end else begin
+				ROB_full <= `FALSE;
+				empty    <= `FALSE;
+			end
+			if (Dis_flag) begin
+				tail            <= tail + 1;
+				op[tail]        <= Dis_op;
+				dest[tail]      <= Dis_rd;
+				val[tail]       <= 0;
+				jump_flag[tail] <= 0;
+				jump_PC[tail]   <= 0;
+				PC[tail]        <= Dis_PC;
+				if (is_store) begin
+					ready[tail] <= `TRUE;
+				end else begin
+					ready[tail] <= `FALSE;
+				end
+			end
+			if (ALU_flag) begin
+				val[ALU_ROB_idx]       <= ALU_val;
+				jump_flag[ALU_ROB_idx] <= ALU_jump_flag;
+				jump_PC[ALU_ROB_idx]   <= ALU_jump_PC;
+				ready[ALU_ROB_idx]     <= `TRUE;
 
-    assign Dec_rs1_flag_out = ready[RF_rs1_idx_in];
-    assign Dec_rs2_flag_out = ready[RF_rs2_idx_in];
-    assign Dec_rs1_out = 
-        flag[RF_rs1_idx_in] ? val[RF_rs1_idx_in] : RF_rs1_idx_in;
-    assign Dec_rs2_out = 
-        flag[RF_rs2_idx_in] ? val[RF_rs2_idx_in] : RF_rs2_idx_in;
-    assign Dec_ROB_full_out = head == tail_next;
+				LSB_from_ALU_flag <= `TRUE;
+				LSB_from_ALU_idx  <= ALU_ROB_idx;
+				LSB_from_ALU_val  <= ALU_val;
+			end else begin
+				LSB_from_ALU_flag <= `FALSE;
+			end
+			if (LSB_load_flag) begin
+				val[LSB_load_ROB_idx]   <= LSB_load_val;
+				ready[LSB_load_ROB_idx] <= `TRUE;
 
-    assign RF_new_flag_out = 
-        Dec_inst_flag_in ? Dec_rd_in != 0 : `FALSE;
-    assign RF_new_idx_out = tail;
-    assign RF_new_rd_out = Dec_rd_in;
+				LSB_from_LSB_flag <= `TRUE;
+				LSB_from_LSB_idx  <= LSB_load_ROB_idx;
+				LSB_from_LSB_val  <= LSB_load_val;
+			end else begin
+				LSB_from_LSB_flag <= `FALSE;
+			end
+			if ((!empty) && ready[head]) begin
+				head <= head + 1;
+				case (op[head])
+					`SB,`SH,`SW: begin
+						ROB_roll       <= `FALSE;
+						IF_jump_flag   <= `FALSE;
+						RF_write_flag  <= `FALSE;
+						LSB_store_flag <= `TRUE;
+						LSB_store_idx  <= head;
+					end
+					`JAL,`JALR: begin
+						ROB_roll       <= `TRUE;
+						IF_jump_flag   <= `TRUE;
+						IF_jump_PC     <= jump_PC[head];
+						RF_write_flag  <= `TRUE;
+						RF_ROB_idx     <= head;
+						RF_rd          <= dest[head];
+						RF_val         <= val[head];
+						LSB_store_flag <= `FALSE;
+					end
+					`BEQ,`BNE,`BLT,`BGE,`BLTU,`BGEU: begin
+						if (jump_flag[head]) begin
+							ROB_roll     <= `TRUE;
+							IF_jump_flag <= `TRUE;
+							IF_jump_PC   <= jump_PC[head];
+						end else begin
+							ROB_roll     <= `FALSE;
+							IF_jump_flag <= `FALSE;
+						end
+						RF_write_flag  <= `FALSE;
+						LSB_store_flag <= `FALSE;
+					end
+					default: begin
+						ROB_roll       <= `FALSE;
+						IF_jump_flag   <= `FALSE;
+						RF_write_flag  <= `TRUE;
+						RF_ROB_idx     <= head;
+						RF_rd          <= dest[head];
+						RF_val         <= val[head];
+						LSB_store_flag <= `FALSE;
+					end
+				endcase
+			end else begin
+				ROB_roll       <= `FALSE;
+				IF_jump_flag   <= `FALSE;
+				RF_write_flag  <= `FALSE;
+				LSB_store_flag <= `FALSE;
+			end
+		end
+	end
 
-    assign RF_write_flag_out = head != tail && 
-                               ready[head] && 
-                               inst[head] != `BEQ && 
-                               inst[head] != `BNE && 
-                               inst[head] != `BLT && 
-                               inst[head] != `BGE && 
-                               inst[head] != `BLTU && 
-                               inst[head] != `BGEU;
-    assign RF_write_idx_out = head;
-    assign RF_write_rd_out = RF_idx[head];
-
-    assign RF_val_out = val[head];
-
-    always @(posedge clk) begin
-        if (rst || jump_wrong) begin
-            jump_wrong <= `FALSE;
-            
-            IF_jump_PC_out <= `ZERO32;
-
-            ready <= `ZERO16;
-            head <= `ZERO4;
-            tail <= `ZERO4;
-            
-            jalr_flag <= `FALSE;
-            jalr_idx <= `5'b0;
-        end else if (rdy) begin
-            if (Dec_inst_flag_in) begin
-                tail <= tail_next;
-                val[tail] <= Dec_PC_in;
-                jump_flag[tail] <= Dec_jump_flag_in;
-                RF_idx[tail] <= Dec_rd_in;
-                inst[tail] <= Dec_inst_in;
-                ready[tail] <= (Dec_inst_in == `SB || 
-                                Dec_inst_in == `SH || 
-                                Dec_inst_in == `SW || 
-                                Dec_inst_in == `JAL || 
-                                Dec_inst_in == `LUI || 
-                                Dec_inst_in == `AUIPC);
-                
-                if (Dec_inst_in == `JALR && jalr_flag == `FALSE) begin
-                    jalr_flag <= `TRUE;
-                    jalr_idx <= tail;
-                end
-            end
-
-            if (RS_flag_in) begin
-                ready[RS_ROB_idx_in] <= `TRUE;
-                if (inst[RS_ROB_idx_in] == `BEQ || 
-                    inst[RS_ROB_idx_in] == `BNE || 
-                    inst[RS_ROB_idx_in] == `BLT || 
-                    inst[RS_ROB_idx_in] == `BGE || 
-                    inst[RS_ROB_idx_in] == `BLTU || 
-                    inst[RS_ROB_idx_in] == `BGEU) begin
-                    jump_flag[RS_ROB_idx_in] <= 
-                        jump_flag[RS_ROB_idx_in] != RS_val_in[0];
-                end else begin
-                    val[RS_ROB_idx_in] <= RS_val_in;
-                    if (inst[RS_ROB_idx_in] == `JALR && 
-                        RS_ROB_idx_in == jalr_idx) begin
-                        jalr_PC <= RS_val_in;
-                    end
-                end
-            end
-
-            if (LSB_flag_in) begin
-                ready[LSB_ROB_idx_in] <= `TRUE;
-                val[LSB_ROB_idx_in] <= LSB_val_in;
-            end
-
-            if (head != tail) begin
-                if (inst[head] == `BEQ || 
-                    inst[head] == `BNE || 
-                    inst[head] == `BLT || 
-                    inst[head] == `BGE || 
-                    inst[head] == `BLTU || 
-                    inst[head] == `BGEU) begin
-                    if (ready[head]) begin
-                        if (jump_flag[head]) begin
-                            jump_wrong <= `TRUE;
-                            IC_jump_PC_out <= val[head];
-                        end
-                    end
-
-                    if (RS_flag_in && RS_ROB_idx_in == head) begin
-                        if (jump_flag[head] != RS_val_in[0]) begin
-                            jump_wrong <= `TRUE;
-                            IF_jump_PC_out <= val[head];
-                        end
-                    end 
-                end else if (inst[head] == `JALR) begin
-                    if (ready[head]) begin
-                        jump_wrong <= `TRUE;
-                        IF_jump_PC_out <= jalr_PC;
-                    end
-
-                    if (RS_flag_in && RS_ROB_idx_in == head) begin
-                        jump_wrong <= `TRUE;
-                        IF_jump_PC_out <= RS_val_in;
-                    end
-                end
-
-                if (ready[head]) begin
-                    ready[head] <= `FALSE;
-                end
-            end
-        end
-    end
 endmodule

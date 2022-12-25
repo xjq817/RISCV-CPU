@@ -1,53 +1,69 @@
 `include "define.v"
 
 module ICache (
-    input  wire  clk,
-    input  wire  rst,
-    input  wire  rdy,
-    input  wire  jump_wrong,
-//MemoryController
-    input  wire         MC_inst_flag_in,
-    input  wire [31:0]  MC_inst_in,
-    output wire [31:0]  MC_PC_out,
-    output wire         MC_inst_flag_out,
+	input  wire					clk,
+	input  wire					rst,
+	input  wire					rdy,
+	input  wire					roll,
 //IF
-    input  wire [31:0]  IF_PC_in,
-    output reg          IF_inst_flag_out,
-    output reg  [31:0]  IF_inst_out,
+	input  wire					IF_flag,
+	input  wire	[31:0]			IF_PC,
+	output reg 					IF_commit,
+	output reg	[31:0]			IF_inst,
+//MemoryController
+	input  wire					MC_flag,
+	input  wire [31:0]			MC_inst,
+	output reg					MC_commit,
+	output reg	[31:0]			MC_PC
 );
-    reg [`IC_INDEX]     valid;
-    reg [31:0]          cache[`IC_INDEX];
-    reg [`IC_TAG_RANGE] tag[`IC_INDEX];
-    wire hit;
-    
-    assign hit = valid[IF_PC_in[`IC_INDEX_RANGE]] && 
-                 tag[IF_PC_in[`IC_INDEX_RANGE]] == IF_PC_in[`IC_TAG_RANGE];
-    assign MC_PC_out = IF_PC_in;
-    assign MC_inst_flag_out = !hit && !MC_inst_flag_in;
 
-    always @(posedge clk) begin
-        if (rst) begin
-            valid <= 0;
-            IF_inst_flag_out <= `FALSE;
-        end else if (rdy) begin
-            if (MC_inst_flag_in) begin
-                valid[IF_PC_in[`IC_INDEX_RANGE]] <= `TRUE;
-                cache[IF_PC_in[`IC_INDEX_RANGE]] <= MC_inst_in;
-                tag[IF_PC_in[`IC_INDEX_RANGE]] <= IF_PC_in[`IC_TAG_RANGE];
-            end
+	reg						stall;
+	reg						valid[`IC_INDEX];
+	reg	[`IC_TAG_INDEX]		tag[`IC_INDEX];
+	reg	[31:0]				data[`IC_INDEX];
 
-            if (jump_wrong) begin
-                IF_inst_flag_out <= `FALSE;
-            end else begin
-                if (hit) begin
-                    IF_inst_flag_out <= `TRUE;
-                    IF_inst_out <= cache[IF_PC_in[`IC_INDEX_RANGE]];
-                end else begin
-                    IF_inst_flag_out <= MC_inst_flag_in;
-                    IF_inst_out <= MC_inst_in;
-                end
-            end
-        end
-    end
-    
+	integer i;
+	always @(posedge clk) begin
+		if (rst) begin
+			for (i = 0; i < `IC_SIZE; i = i + 1) begin
+				valid[i] <= `FALSE;
+			end
+			stall <= 0;
+		end else if (roll || !rdy) begin
+			MC_commit <= `FALSE;
+			IF_commit <= `FALSE;
+		end else begin
+			if (IF_flag) begin
+				if (stall) begin
+					MC_commit <= `FALSE;
+					IF_commit <= `FALSE;
+					stall <= 0;
+				end else begin
+					if (valid[IF_PC[`IC_INDEX_RANGE]] && tag[IF_PC[`IC_INDEX_RANGE]] == IF_PC[`IC_TAG]) begin
+						MC_commit <= `FALSE;
+						IF_commit <= `TRUE;
+						IF_inst <= data[IF_PC[`IC_INDEX_RANGE]];
+						stall <= 1;
+					end else begin
+						if (MC_flag) begin
+							MC_commit <= `FALSE;
+							IF_commit <= `TRUE;
+							IF_inst <= MC_inst;
+							valid[IF_PC[`IC_INDEX_RANGE]] <= `TRUE;
+							tag[IF_PC[`IC_INDEX_RANGE]] <= IF_PC[`IC_TAG];
+							data[IF_PC[`IC_INDEX_RANGE]] <= MC_inst;
+							stall <= 1;
+						end else begin
+							MC_commit <= `TRUE;
+							MC_PC <= IF_PC;
+						end
+					end
+				end
+			end else begin
+				MC_commit <= `FALSE;
+				IF_commit <= `FALSE;
+			end
+		end
+	end
+
 endmodule

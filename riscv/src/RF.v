@@ -1,64 +1,108 @@
 `include "define.v"
 
-module RF(
-    input  wire  clk,
-    input  wire  rst,
-    input  wire  rdy,
-    input  wire  jump_wrong,
+module RF (
+	input  wire							clk,
+	input  wire 						rst,
+	input  wire 						rdy,
+	input  wire 						roll,
 //decoder
-    input  wire [`REG_INDEX_RANGE]  dec_rs1_in,
-    input  wire [`REG_INDEX_RANGE]  dec_rs2_in,
-    output wire                     dec_rs1_flag_out,
-    output wire                     dec_rs2_flag_out,
-    output wire [31:0]              dec_rs1_out,
-    output wire [31:0]              dec_rs2_out,
+	input  wire 						Dec_R1,
+	input  wire	[`REG_INDEX_RANGE] 		Dec_rs1,
+	input  wire 						Dec_R2,
+	input  wire	[`REG_INDEX_RANGE] 		Dec_rs2,
+//dispatch
+	input  wire							Dis_flag,
+	input  wire	[`REG_INDEX_RANGE]		Dis_rd,
+	input  wire	[`ROB_INDEX_RANGE]		Dis_ROB_idx,
+	output reg							Dis_flag1,
+	output reg							Dis_R1,
+	output reg	[31:0] 					Dis_V1,
+	output reg							Dis_flag2,
+	output reg							Dis_R2,
+	output reg	[31:0]					Dis_V2,
 //ROB
-    input  wire                     ROB_new_flag_in,
-    input  wire [`ROB_INDEX_RANGE]  ROB_new_idx_in,
-    input  wire [`REG_INDEX_RANGE]  ROB_new_rd_in,
-    input  wire                     ROB_write_flag_in,
-    input  wire [`ROB_INDEX_RANGE]  ROB_write_idx_in,
-    input  wire [`REG_INDEX_RANGE]  ROB_write_rd_in,
-    input  wire [31:0]              ROB_val_in,
-    output wire [`ROB_INDEX_RANGE]  ROB_rs1_idx_out,
-    output wire [`ROB_INDEX_RANGE]  ROB_rs2_idx_out
+	input  wire							ROB_flag,
+	input  wire	[`ROB_INDEX_RANGE]		ROB_new_idx,
+	input  wire	[`REG_INDEX_RANGE] 		ROB_rd,
+	input  wire	[31:0]					ROB_val
 );
-    reg [31:0]             reg_val[`REG_INDEX];
-    reg [31:0]             reg_status;
-    reg [`ROB_INDEX_RANGE] reg_ROB_idx[`REG_INDEX];
 
-    integer i;
-    always @(posedge clk) begin
-        if (rst) begin
-            reg_status <= ~(`ZERO32);
-            for (i = 0; i < 32; i = i + 1) begin
-                reg_val[i] <= `ZERO32;
-            end
-        end else if (!rdy) begin
-        end else if (jump_wrong) begin
-            reg_status <= ~(`ZERO32);
-        end else begin
-            if (ROB_write_flag_in && ROB_write_rd_in) begin
-                reg_val[ROB_write_rd_in] <= ROB_val_in;
-                if (reg_ROB_idx[ROB_write_rd_in] == ROB_write_idx_in) begin
-                    reg_status[ROB_write_rd_in] <= (ROB_new_rd_in != ROB_write_rd_in);
-                end else begin
-                    reg_status[ROB_write_rd_in] <= `FALSE;
-                end
-            end
-            if (ROB_new_flag_in && ROB_new_rd_in) begin
-                reg_ROB_idx[ROB_new_rd_in] <= ROB_new_idx_in;
-                reg_status[ROB_new_rd_in] <= `FALSE;
-            end
-        end
-    end
+	reg	[31:0]					val[`REG_INDEX];
+	reg	[`ROB_INDEX_RANGE]		ROB_idx[`REG_INDEX];
+	reg 						ready[`REG_INDEX];
 
-    assign dec_rs1_flag_out = reg_status[dec_rs1_in];
-    assign dec_rs2_flag_out = reg_status[dec_rs2_in];
-    assign dec_rs1_out = reg_val[dec_rs1_in];
-    assign dec_rs2_out = reg_val[dec_rs2_in];
+	always @(*) begin
+		if (Dec_R1 == `FALSE) begin
+			Dis_flag1 = `FALSE;
+		end else begin
+			Dis_flag1 = `TRUE;
+			if (ready[Dec_rs1] == `TRUE) begin
+				Dis_R1 = `TRUE;
+				Dis_V1 = val[Dec_rs1];
+			end else if (ROB_flag == `TRUE && ROB_new_idx ==ROB_idx[Dec_rs1]) begin
+				Dis_R1 = `TRUE;
+				Dis_V1 = ROB_val;
+			end else begin
+				Dis_R1 = `FALSE;
+				Dis_V1 = {27'b0, ROB_idx[Dec_rs1]};
+			end
+		end
+	end
 
-    assign ROB_rs1_idx_out = reg_ROB_idx[dec_rs1_in];
-    assign ROB_rs2_idx_out = reg_ROB_idx[dec_rs2_in];
+	always @(*) begin
+		if (Dec_R2 == `FALSE) begin
+			Dis_flag2 = `FALSE;
+		end else begin
+			Dis_flag2 = `TRUE;
+			if (ready[Dec_rs2] == `TRUE) begin
+				Dis_R2 = `TRUE;
+				Dis_V2 = val[Dec_rs2];
+			end else if (ROB_flag == `TRUE && ROB_new_idx ==ROB_idx[Dec_rs2]) begin
+				Dis_R2 = `TRUE;
+				Dis_V2 = ROB_val;
+			end else begin
+				Dis_R2 = `FALSE;
+				Dis_V2 = {27'b0, ROB_idx[Dec_rs2]};
+			end
+		end
+	end
+
+	integer i;
+	always @(posedge clk) begin
+		if (rst) begin
+			for (i = 0; i < `REG_SIZE; i = i + 1) begin
+				val[i] <= 0;
+				ready[i] <= `TRUE;
+			end
+		end else if (roll) begin
+			for (i = 0; i < `REG_SIZE; i = i + 1) begin
+				ready[i] <= `TRUE;
+			end
+			if (ROB_flag == `TRUE && ROB_rd != 0) begin
+				val[ROB_rd] <= ROB_val;
+			end
+		end else if (!rdy) begin
+		end else begin
+			if (ROB_flag == `TRUE && ROB_rd != 0 && Dis_flag == `TRUE && Dis_rd != 0) begin
+				ROB_idx[Dis_rd] <= Dis_ROB_idx;
+				ready[Dis_rd]   <= `FALSE;
+				val[ROB_rd]     <= ROB_val;
+				if (ROB_rd != Dis_rd && ROB_idx[ROB_rd] == ROB_new_idx) begin
+					ready[ROB_rd] <= `TRUE;
+				end
+			end else begin
+				if (ROB_flag == `TRUE && ROB_rd != 0) begin
+					val[ROB_rd] <= ROB_val;
+					if (ROB_idx[ROB_rd] == ROB_new_idx) begin
+						ready[ROB_rd] <= `TRUE;
+					end
+				end
+				if (Dis_flag == `TRUE && Dis_rd != 0) begin
+					ROB_idx[Dis_rd] <= Dis_ROB_idx;
+					ready[Dis_rd]   <= `FALSE;
+				end
+			end
+		end
+	end
 
 endmodule

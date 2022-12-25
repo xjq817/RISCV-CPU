@@ -1,95 +1,61 @@
 `include "define.v"
 
-module IF(
-    input  wire  clk,
-    input  wire  rst,
-    input  wire  rdy,
-    input  wire  jump_wrong,
-//Icache
-    input  wire         IC_flag_in,
-    input  wire [31:0]  IC_inst_in,
-    output reg  [31:0]  IC_PC_out,
-//decoder
-    input  wire         Dec_flag_in,
-    output wire         Dec_inst_flag_out,
-    output wire [31:0]  Dec_inst_out,
-    output reg          Dec_jump_flag_out,
-    output reg  [31:0]  Dec_jump_PC_out,
+module IF (
+	input  wire				clk,
+	input  wire 			rst,
+	input  wire 			rdy,
+//ICache
+	input  wire 			IC_commit,
+	input  wire	[31:0]		IC_val,
+	output reg	 			IC_flag,
+	output reg	[31:0]		IC_PC,
+//IQ
+	input  wire				IQ_full,
+	output reg				IQ_flag,
+	output reg	[31:0]		IQ_inst,
+	output reg	[31:0]		IQ_PC,
 //ROB
-    input  wire [31:0]  ROB_jump_PC_in,
+	input  wire				ROB_jump_flag,
+	input  wire	[31:0]		ROB_jump_PC
 );
 
-    reg  [31:0] imm;
-    wire [6:0]  opcode;
-    reg  [31:0] PC;
+	reg			stall;
+	reg	[31:0]	PC;
 
-    assign opcode = IC_inst_in[6:0];
-    assign Dec_inst_flag_out = IC_flag_in;
-    assign Dec_inst_out = IC_inst_in;
-
-    always @(*) begin
-        case (opcode)
-            `AUIPCOP: imm = {IC_inst_in[31:12], 12'b0};
-            `LUIOP  : imm = {IC_inst_in[31:12], 12'b0};                                 
-            `JALROP : imm = {{20{IC_inst_in[31]}}, IC_inst_in[31:20]};
-            `JALOP  : imm = {{12{IC_inst_in[31]}}, IC_inst_in[19:12], IC_inst_in[20], IC_inst_in[30:21]} << 1;
-            default : imm = {{20{IC_inst_in[31]}}, IC_inst_in[7], IC_inst_in[30:25], IC_inst_in[11:8]} << 1;  
-        endcase
-    end
-
-    integer i;
-    always @(posedge clk) begin
-        if (rst) begin
-            PC <= `ZERO32;
-        end else if (!rdy) begin
-        end else if (jump_wrong) begin
-            PC <= ROB_jump_PC_in;
-        end else begin
-            if (IC_flag_in && !Dec_flag_in) begin
-                case (opcode)
-                    `JALOP    : PC <= PC + imm;
-                    default   : PC <= PC + 4;
-                endcase
-            end
-        end
-
-    end
-
-    always @(*) begin
-        if (!IC_flag_in || Dec_flag_in) begin
-            IC_PC_out = PC;
-            Dec_jump_flag_out = `TRUE;
-            Dec_jump_PC_out = PC;
-        end
-        else begin
-            case (opcode)
-                `BRANCHOP: begin
-                    IC_PC_out = PC + 4;
-                    Dec_jump_flag_out = `FALSE;
-                    Dec_jump_PC_out = PC + imm;
-                end 
-                `JALOP: begin
-                    IC_PC_out = PC + imm;
-                    Dec_jump_flag_out = `TRUE;
-                    Dec_jump_PC_out = PC + 4;
-                end
-                `JALROP: begin
-                    IC_PC_out = PC + 4;
-                    Dec_jump_flag_out = `FALSE;
-                    Dec_jump_PC_out = PC + 4;
-                end
-                `LUIOP: begin
-                    IC_PC_out = PC + 4;
-                    Dec_jump_flag_out = `TRUE;
-                    Dec_jump_PC_out = imm;
-                end
-                default:  begin
-                    IC_PC_out = PC + 4;
-                    Dec_jump_flag_out = `TRUE;
-                    Dec_jump_PC_out = `ZERO32;
-                end
-            endcase
-        end
-    end
+	always @(posedge clk) begin
+		if (rst) begin
+			stall   <= 0;
+			PC      <= 0;
+			IC_flag <= `FALSE;
+			IQ_flag <= `FALSE;
+		end else if (ROB_jump_flag) begin
+			stall   <= 0;
+			PC      <= ROB_jump_PC;
+			IC_flag <= `FALSE;
+			IQ_flag <= `FALSE;
+		end else if (IQ_full || !rdy) begin
+			IC_flag <= `FALSE;
+			IQ_flag <= `FALSE;
+		end else begin
+			if (stall == 0) begin
+				if (IC_commit) begin
+					IC_flag <= `FALSE;
+					IQ_flag <= `TRUE;
+					IQ_inst <= IC_val;
+					IQ_PC   <= PC;
+					PC      <= PC + 4;
+					stall   <= 1;
+				end else begin
+					IC_flag <= `TRUE;
+					IC_PC   <= PC;
+					IQ_flag <= `FALSE;
+				end
+			end else begin
+				stall   <= 0;
+				IC_flag <= `FALSE;
+				IQ_flag <= `FALSE;
+			end
+		end
+	end
 
 endmodule
