@@ -25,7 +25,7 @@ module MemoryController (
 	output reg	[31:0]			LSB_val
 );
 
-	reg [1:0]		stall;
+	reg [1:0] 		stall;
 	reg				work;
 	reg				belong;
 	reg 			is_store;
@@ -99,7 +99,7 @@ module MemoryController (
 		end else begin
 			if (work) begin
 				if (!is_store && addr[17:16] == 2'b11) begin
-					if (done[0] == 1'b1) begin
+					if (done == 1'b1) begin
 						LSB_commit <= `TRUE;
 						IC_commit  <= `FALSE;
 						LSB_val    <= {24'b0, mem_din};
@@ -207,7 +207,7 @@ module MemoryController (
 							IC_commit  <= `FALSE;
 							LSB_commit <= `FALSE;
 						end else begin
-							stall      <= stall + 1;
+							stall      <= stall + (stall != 2'b11);
 							mem_wr     <= 0;
 							mem_a      <= 0;
 							mem_dout   <= 0;
@@ -216,7 +216,7 @@ module MemoryController (
 						end
 					end else begin
 						if (stall == 2'b01) begin
-							stall <= 2'b00;
+							stall      <= 0;
 							work       <= `TRUE;
 							belong     <= 0;
 							is_store   <= LSB_type;
@@ -231,7 +231,7 @@ module MemoryController (
 							IC_commit  <= `FALSE;
 							LSB_commit <= `FALSE;
 						end else begin
-							stall      <= 2'b01;
+							stall      <= stall + (stall != 2'b01);
 							IC_commit  <= `FALSE;
 							LSB_commit <= `FALSE;
 							mem_wr     <= 0;
@@ -240,8 +240,8 @@ module MemoryController (
 						end
 					end
 				end else if (IC_flag) begin
-					if (stall == 2'b01) begin
-						stall      <= 2'b00;
+					if (stall == 2'b11) begin
+						stall      <= 0;
 						work       <= `TRUE;
 						belong     <= 1;
 						is_store   <= 0;
@@ -254,7 +254,7 @@ module MemoryController (
 						IC_commit  <= `FALSE;
 						LSB_commit <= `FALSE;
 					end else begin
-						stall      <= 2'b01;
+						stall      <= stall + (stall != 2'b11);
 						IC_commit  <= `FALSE;
 						LSB_commit <= `FALSE;
 						mem_wr     <= 0;
