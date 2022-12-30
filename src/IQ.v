@@ -30,6 +30,8 @@ module IQ (
 	reg	[`IQ_INDEX_RANGE]		tail;
 	reg [4:0]					size;
 
+	wire head_nex = (head + 1 == `IQ_SIZE) ? 0 : head + 1;
+
 	always @(posedge clk) begin
 		if (rst || roll) begin
 			head       <= 0;
@@ -55,11 +57,11 @@ module IQ (
 			if (size > Dec_flag) begin
 				Dec_commit <= `TRUE;
 				if (Dec_flag) begin
-					Dec_inst <= inst[head + 1];
-					Dec_PC   <= PC[head + 1];
+					Dec_inst <= inst[head_nex];
+					Dec_PC   <= PC[head_nex];
 
-					Dec_BTB_PC      <= BTB_PC[head + 1];
-					Dec_BTB_predict <= BTB_predict[head + 1];
+					Dec_BTB_PC      <= BTB_PC[head_nex];
+					Dec_BTB_predict <= BTB_predict[head_nex];
 				end else begin
 					Dec_inst <= inst[head];
 					Dec_PC   <= PC[head];

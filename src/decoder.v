@@ -35,10 +35,15 @@ module decoder (
 	assign Dis_BTB_predict = IQ_BTB_predict;
 
 	always @(*) begin
+		RF_R1 = `FALSE;
+		RF_rs1 = 0;
+		RF_R2 = `FALSE;
+		RF_rs2 = 0;
+		Dis_rd = 0;
+		Dis_imm = 0;
+		Dis_op = 0;
 		if (IQ_flag && !RS_full && !ROB_full && !LSB_full) begin
 			Dis_PC = IQ_PC;
-			RF_R1 = `FALSE;
-			RF_R2 = `FALSE;
 			case (IQ_inst[6:0])
 				`LUIOP: begin
 					Dis_op  = `LUI;

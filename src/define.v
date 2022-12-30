@@ -46,9 +46,9 @@
 `define CALCIOP     7'b0010011
 `define CALCOP      7'b0110011
 
-`define ROB_INDEX_RANGE     4:0
-`define ROB_INDEX           31:0
-`define ROB_SIZE            32
+`define ROB_INDEX_RANGE     3:0
+`define ROB_INDEX           15:0
+`define ROB_SIZE            16
 `define RS_INDEX_RANGE      3:0
 `define RS_INDEX            15:0
 `define RS_SIZE             16

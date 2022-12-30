@@ -31,6 +31,10 @@ module RF (
 	reg	[`ROB_INDEX_RANGE]		ROB_idx[`REG_INDEX];
 	reg 						ready[`REG_INDEX];
 
+	// wire forteen_ready = ready[14];
+	// wire [`ROB_INDEX_RANGE] forteen_ROB_idx = ROB_idx[14];
+	// wire [31:0] forteen_val = val[14];
+
 	always @(*) begin
 		if (Dec_R1 == `FALSE) begin
 			Dis_flag1 = `FALSE;

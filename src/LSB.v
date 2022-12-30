@@ -46,16 +46,27 @@ module LSB (
 	reg	[`LSB_INDEX_RANGE]		head;
 	reg	[`LSB_INDEX_RANGE]		tail;
 	reg	[5:0]					op[`LSB_INDEX];
+	// wire ophead = op[head];
 	reg							Rj[`LSB_INDEX];
+	// wire rjhead = Rj[head];
 	reg							Rk[`LSB_INDEX];
+	// wire rkhead = Rk[head];
 	reg	[`ROB_INDEX_RANGE]		Qj[`LSB_INDEX];
+	// wire qjhead = Qj[head];
 	reg	[`ROB_INDEX_RANGE]		Qk[`LSB_INDEX];
+	// wire qkhead = Qk[head];
 	reg	[31:0]					Vj[`LSB_INDEX];
+	// wire vjhead = Vj[head];
 	reg	[31:0]					Vk[`LSB_INDEX];
+	// wire vkhead = Vk[head];
 	reg	[31:0]					imm[`LSB_INDEX];
+	// wire immhead = imm[head];
 	reg	[`ROB_INDEX_RANGE]		ROB_idx[`LSB_INDEX];
+	// wire robidxhead = ROB_idx[head];
 	reg	[31:0]					PC[`LSB_INDEX];
+	// wire pchead = PC[head];
 	reg 						commit[`LSB_INDEX];
+	// wire commithead = commit[head];
 	reg [4:0]					commit_cnt;
 
 	wire head_store  = (op[head] == `SB || op[head] == `SH || op[head] == `SW);

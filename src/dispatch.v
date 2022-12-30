@@ -61,7 +61,7 @@ module dispatch (
 	assign LSB_flag      = (Dec_flag && (is_load || is_store));
 	assign RF_write_flag = (Dec_flag && !is_store && !is_branch);
 	assign RS_flag       = (Dec_flag && !is_load && !is_store);
-	assign RS_put_idx    = RS_put_idx_in;
+	assign RS_put_idx    = RS_flag ? RS_put_idx_in : 0;
 	assign RS_ready      = RS_ready_in;
 	assign RS_ready_idx  = RS_ready_idx_in;
 
@@ -75,6 +75,15 @@ module dispatch (
 
 			Dis_BTB_PC      = Dec_BTB_PC;
 			Dis_BTB_predict = Dec_BTB_predict;
+		end else begin
+			Dis_op      = 0;
+			Dis_imm     = 0;
+			Dis_rd      = 0;
+			Dis_ROB_idx = 0;
+			Dis_PC      = 0;
+
+			Dis_BTB_PC      = 0;
+			Dis_BTB_predict = 0;
 		end
 	end
 
