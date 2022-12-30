@@ -7,6 +7,8 @@ module dispatch (
 	input  wire [`REG_INDEX_RANGE]		Dec_rd,
 	input  wire	[5:0] 					Dec_op,
 	input  wire	[31:0]					Dec_PC,
+	input  wire	[31:0]					Dec_BTB_PC,
+	input  wire							Dec_BTB_predict,
 //RF
 	input  wire 						RF_flag1,
 	input  wire 						RF_R1,
@@ -45,7 +47,9 @@ module dispatch (
 	output reg							Dis_R1,
 	output reg	[31:0]					Dis_V1,
 	output reg							Dis_R2,
-	output reg	[31:0]					Dis_V2
+	output reg	[31:0]					Dis_V2,
+	output reg	[31:0]					Dis_BTB_PC,
+	output reg							Dis_BTB_predict
 );
 	wire is_load   = (Dec_op == `LB  || Dec_op == `LH   || Dec_op == `LW || 
 					  Dec_op == `LBU || Dec_op == `LHU);
@@ -56,7 +60,7 @@ module dispatch (
 	assign ROB_flag      = Dec_flag;
 	assign LSB_flag      = (Dec_flag && (is_load || is_store));
 	assign RF_write_flag = (Dec_flag && !is_store && !is_branch);
-	assign RS_flag       = (Dec_flag && !is_store && !is_store);
+	assign RS_flag       = (Dec_flag && !is_load && !is_store);
 	assign RS_put_idx    = RS_put_idx_in;
 	assign RS_ready      = RS_ready_in;
 	assign RS_ready_idx  = RS_ready_idx_in;
@@ -68,6 +72,9 @@ module dispatch (
 			Dis_rd      = Dec_rd;
 			Dis_ROB_idx = ROB_nex_idx;
 			Dis_PC      = Dec_PC;
+
+			Dis_BTB_PC      = Dec_BTB_PC;
+			Dis_BTB_predict = Dec_BTB_predict;
 		end
 	end
 

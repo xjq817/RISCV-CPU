@@ -48,36 +48,54 @@ module alu (
 						if (RS_Vj == RS_Vk) begin
 							ALU_jump_flag <= `TRUE;
 							ALU_jump_PC   <= RS_PC + RS_imm;
+						end else begin
+							ALU_jump_flag <= `FALSE;
+							ALU_jump_PC   <= RS_PC + 4;
 						end
 					end
 					`BNE: begin
 						if (RS_Vj != RS_Vk) begin
 							ALU_jump_flag <= `TRUE;
 							ALU_jump_PC   <= RS_PC + RS_imm;
+						end else begin
+							ALU_jump_flag <= `FALSE;
+							ALU_jump_PC   <= RS_PC + 4;
 						end
 					end
 					`BLT: begin
 						if ($signed(RS_Vj) < $signed(RS_Vk)) begin
 							ALU_jump_flag <= `TRUE;
 							ALU_jump_PC   <= RS_PC + RS_imm;
+						end else begin
+							ALU_jump_flag <= `FALSE;
+							ALU_jump_PC   <= RS_PC + 4;
 						end
 					end
 					`BGE: begin
 						if ($signed(RS_Vj) >= $signed(RS_Vk)) begin
 							ALU_jump_flag <= `TRUE;
 							ALU_jump_PC   <= RS_PC + RS_imm;
+						end else begin
+							ALU_jump_flag <= `FALSE;
+							ALU_jump_PC   <= RS_PC + 4;
 						end
 					end
 					`BLTU: begin
 						if (RS_Vj < RS_Vk) begin
 							ALU_jump_flag <= `TRUE;
 							ALU_jump_PC   <= RS_PC + RS_imm;
+						end else begin
+							ALU_jump_flag <= `FALSE;
+							ALU_jump_PC   <= RS_PC + 4;
 						end
 					end
 					`BGEU: begin
 						if (RS_Vj >= RS_Vk) begin
 							ALU_jump_flag <= `TRUE;
 							ALU_jump_PC   <= RS_PC + RS_imm;
+						end else begin
+							ALU_jump_flag <= `FALSE;
+							ALU_jump_PC   <= RS_PC + 4;
 						end
 					end
 					`ADDI:  ALU_val <= RS_Vj + RS_imm;

@@ -37,25 +37,26 @@ module ICache (
 				if (stall) begin
 					MC_commit <= `FALSE;
 					IF_commit <= `FALSE;
-					stall <= 0;
+					stall     <= 0;
 				end else begin
 					if (valid[IF_PC[`IC_INDEX_RANGE]] && tag[IF_PC[`IC_INDEX_RANGE]] == IF_PC[`IC_TAG]) begin
 						MC_commit <= `FALSE;
 						IF_commit <= `TRUE;
-						IF_inst <= data[IF_PC[`IC_INDEX_RANGE]];
-						stall <= 1;
+						IF_inst   <= data[IF_PC[`IC_INDEX_RANGE]];
+						stall     <= 1;
 					end else begin
 						if (MC_flag) begin
 							MC_commit <= `FALSE;
 							IF_commit <= `TRUE;
-							IF_inst <= MC_inst;
+							IF_inst   <= MC_inst;
+							stall     <= 1;
+
 							valid[IF_PC[`IC_INDEX_RANGE]] <= `TRUE;
-							tag[IF_PC[`IC_INDEX_RANGE]] <= IF_PC[`IC_TAG];
-							data[IF_PC[`IC_INDEX_RANGE]] <= MC_inst;
-							stall <= 1;
+							tag[IF_PC[`IC_INDEX_RANGE]]   <= IF_PC[`IC_TAG];
+							data[IF_PC[`IC_INDEX_RANGE]]  <= MC_inst;
 						end else begin
 							MC_commit <= `TRUE;
-							MC_PC <= IF_PC;
+							MC_PC     <= IF_PC;
 						end
 					end
 				end

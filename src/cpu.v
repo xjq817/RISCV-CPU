@@ -52,6 +52,8 @@ wire [31:0]             Dec_Dis_imm;
 wire [`REG_INDEX_RANGE] Dec_Dis_rd;
 wire [5:0]              Dec_Dis_op;
 wire [31:0]             Dec_Dis_PC;
+wire [31:0]             Dec_Dis_BTB_PC;
+wire                    Dec_Dis_BTB_predict;
 
 //Dis - RF
 wire        RF_Dis_flag1;
@@ -92,15 +94,21 @@ wire [31:0] IC_IF_inst;
 wire        IF_IQ_flag;
 wire [31:0] IF_IQ_inst;
 wire [31:0] IF_IQ_PC;
+wire [31:0] IF_IQ_BTB_PC;
+wire				IF_IQ_BTB_predict;
 
 //IF - ROB
 wire        ROB_IF_jump_flag;
 wire [31:0] ROB_IF_jump_PC;
+wire        ROB_IF_BTB_flag;
+wire [31:0] ROB_IF_BTB_PC;
 
 //IQ - Dec
 wire        IQ_Dec_commit;
 wire [31:0] IQ_Dec_inst;
 wire [31:0] IQ_Dec_PC;
+wire [31:0] IQ_Dec_BTB_PC;
+wire				IQ_Dec_BTB_predict;
 
 //Dec - RF
 wire                    Dec_RF_R1;
@@ -143,6 +151,8 @@ wire                    Dis_R1;
 wire [31:0]             Dis_V1;
 wire                    Dis_R2;
 wire [31:0]             Dis_V2;
+wire [31:0]             Dis_BTB_PC;
+wire                    Dis_BTB_predict;
 
 //ROB
 wire [`ROB_INDEX_RANGE] ROB_nex_idx;
@@ -204,6 +214,8 @@ dispatch dispatch(
   .Dec_rd(Dec_Dis_rd),
   .Dec_op(Dec_Dis_op),
   .Dec_PC(Dec_Dis_PC),
+  .Dec_BTB_PC(Dec_Dis_BTB_PC),
+  .Dec_BTB_predict(Dec_Dis_BTB_predict),
   .RF_flag1(RF_Dis_flag1),
   .RF_R1(RF_Dis_R1),
   .RF_V1(RF_Dis_V1),
@@ -237,7 +249,9 @@ dispatch dispatch(
   .Dis_R1(Dis_R1),
   .Dis_V1(Dis_V1),
   .Dis_R2(Dis_R2),
-  .Dis_V2(Dis_V2)
+  .Dis_V2(Dis_V2),
+  .Dis_BTB_PC(Dis_BTB_PC),
+  .Dis_BTB_predict(Dis_BTB_predict)
 );
 
 ICache ICache(
@@ -267,8 +281,12 @@ IF IF(
   .IQ_flag(IF_IQ_flag),
   .IQ_inst(IF_IQ_inst),
   .IQ_PC(IF_IQ_PC),
+  .IQ_BTB_PC(IF_IQ_BTB_PC),
+  .IQ_BTB_predict(IF_IQ_BTB_predict),
   .ROB_jump_flag(ROB_IF_jump_flag),
-  .ROB_jump_PC(ROB_IF_jump_PC)
+  .ROB_jump_PC(ROB_IF_jump_PC),
+  .ROB_BTB_flag(ROB_IF_BTB_flag),
+  .ROB_BTB_PC(ROB_IF_BTB_PC)
 );
 
 IQ IQ(
@@ -279,10 +297,14 @@ IQ IQ(
   .IF_flag(IF_IQ_flag),
   .IF_inst(IF_IQ_inst),
   .IF_PC(IF_IQ_PC),
+  .IF_BTB_PC(IF_IQ_BTB_PC),
+  .IF_BTB_predict(IF_IQ_BTB_predict),
   .Dec_flag(Dec_flag),
   .Dec_commit(IQ_Dec_commit),
   .Dec_inst(IQ_Dec_inst),
   .Dec_PC(IQ_Dec_PC),
+  .Dec_BTB_PC(IQ_Dec_BTB_PC),
+  .Dec_BTB_predict(IQ_Dec_BTB_predict),
   .IQ_full(IQ_full)
 );
 
@@ -290,6 +312,8 @@ decoder decoder(
   .IQ_flag(IQ_Dec_commit),
   .IQ_inst(IQ_Dec_inst),
   .IQ_PC(IQ_Dec_PC),
+  .IQ_BTB_PC(IQ_Dec_BTB_PC),
+  .IQ_BTB_predict(IQ_Dec_BTB_predict),
   .RF_R1(Dec_RF_R1),
   .RF_rs1(Dec_RF_rs1),
   .RF_R2(Dec_RF_R2),
@@ -298,6 +322,8 @@ decoder decoder(
   .Dis_rd(Dec_Dis_rd),
   .Dis_imm(Dec_Dis_imm),
   .Dis_PC(Dec_Dis_PC),
+  .Dis_BTB_PC(Dec_Dis_BTB_PC),
+  .Dis_BTB_predict(Dec_Dis_BTB_predict),
   .RS_full(RS_full),
   .LSB_full(LSB_full),
   .ROB_full(ROB_full),
@@ -347,6 +373,8 @@ ROB ROB(
   .rdy(rdy_in),
   .IF_jump_flag(ROB_IF_jump_flag),
   .IF_jump_PC(ROB_IF_jump_PC),
+  .IF_BTB_flag(ROB_IF_BTB_flag),
+  .IF_BTB_PC(ROB_IF_BTB_PC),
   .Dec_flag(Dec_flag),
   .Dis_flag(Dis_ROB_flag),
   .Dis_op(Dis_op),
@@ -356,6 +384,8 @@ ROB ROB(
   .Dis_ROB_idx1(Dis_ROB_rs1_idx),
   .Dis_flag2(Dis_ROB_flag2),
   .Dis_ROB_idx2(Dis_ROB_rs2_idx),
+  .Dis_BTB_PC(Dis_BTB_PC),
+  .Dis_BTB_predict(Dis_BTB_predict),
   .Dis_R1(ROB_Dis_R1),
   .Dis_V1(ROB_Dis_V1),
   .Dis_R2(ROB_Dis_R2),

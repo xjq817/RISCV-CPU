@@ -5,6 +5,8 @@ module decoder (
 	input  wire							IQ_flag,
 	input  wire	[31:0]					IQ_inst,
 	input  wire	[31:0]					IQ_PC,
+	input  wire	[31:0]					IQ_BTB_PC,
+	input  wire							IQ_BTB_predict,
 //RF
 	output reg  						RF_R1,
 	output reg	[`REG_INDEX_RANGE] 		RF_rs1,
@@ -15,6 +17,8 @@ module decoder (
 	output reg	[`REG_INDEX_RANGE]		Dis_rd,
 	output reg	[31:0]					Dis_imm,
 	output reg	[31:0]					Dis_PC,
+	output wire	[31:0]					Dis_BTB_PC,
+	output wire							Dis_BTB_predict,
 //RS
 	input  wire							RS_full,
 //LSB
@@ -26,6 +30,9 @@ module decoder (
 );
 
 	assign Dec_flag = IQ_flag && !RS_full && !ROB_full && !LSB_full;
+
+	assign Dis_BTB_PC      = IQ_BTB_PC;
+	assign Dis_BTB_predict = IQ_BTB_predict;
 
 	always @(*) begin
 		if (IQ_flag && !RS_full && !ROB_full && !LSB_full) begin

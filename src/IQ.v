@@ -9,17 +9,23 @@ module IQ (
 	input  wire					IF_flag,
 	input  wire	[31:0]			IF_inst,
 	input  wire	[31:0]			IF_PC,
+	input  wire [31:0]			IF_BTB_PC,
+	input  wire 				IF_BTB_predict,
 //decoder
 	input  wire					Dec_flag,
 	output reg					Dec_commit,
 	output reg	[31:0]			Dec_inst,
 	output reg	[31:0]			Dec_PC,
+	output reg	[31:0]			Dec_BTB_PC,
+	output reg					Dec_BTB_predict,
 //IQ
 	output reg					IQ_full
 );
 
 	reg	[31:0]					inst[`IQ_INDEX];
 	reg	[31:0]					PC[`IQ_INDEX];
+	reg	[31:0]					BTB_PC[`IQ_INDEX];
+	reg							BTB_predict[`IQ_INDEX];
 	reg	[`IQ_INDEX_RANGE]		head;
 	reg	[`IQ_INDEX_RANGE]		tail;
 	reg [4:0]					size;
@@ -42,15 +48,24 @@ module IQ (
 				tail       <= tail + 1;
 				inst[tail] <= IF_inst;
 				PC[tail]   <= IF_PC;
+
+				BTB_PC[tail]      <= IF_BTB_PC;
+				BTB_predict[tail] <= IF_BTB_predict;
 			end
 			if (size > Dec_flag) begin
 				Dec_commit <= `TRUE;
 				if (Dec_flag) begin
 					Dec_inst <= inst[head + 1];
 					Dec_PC   <= PC[head + 1];
+
+					Dec_BTB_PC      <= BTB_PC[head + 1];
+					Dec_BTB_predict <= BTB_predict[head + 1];
 				end else begin
 					Dec_inst <= inst[head];
 					Dec_PC   <= PC[head];
+
+					Dec_BTB_PC      <= BTB_PC[head];
+					Dec_BTB_predict <= BTB_predict[head];
 				end
 			end else begin
 				Dec_commit <= `FALSE;

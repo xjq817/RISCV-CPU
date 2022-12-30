@@ -5,7 +5,7 @@ libexec
 riscv32-unknown-elf
 share
 1.tar.zst
-
+riscv
 
 *.o
 *.vcd
