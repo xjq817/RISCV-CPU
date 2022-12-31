@@ -28,9 +28,9 @@ module IQ (
 	reg							BTB_predict[`IQ_INDEX];
 	reg	[`IQ_INDEX_RANGE]		head;
 	reg	[`IQ_INDEX_RANGE]		tail;
-	reg [4:0]					size;
+	integer						size;
 
-	wire head_nex = (head + 1 == `IQ_SIZE) ? 0 : head + 1;
+	wire [`IQ_INDEX_RANGE] head_nex = (head + 1 == `IQ_SIZE) ? 0 : head + 1;
 
 	always @(posedge clk) begin
 		if (rst || roll) begin

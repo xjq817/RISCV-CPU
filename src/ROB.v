@@ -83,9 +83,9 @@ module ROB (
 	assign ROB_nex_idx   = tail;
 
 	assign Dis_R1 = Dis_flag1 && ready[Dis_ROB_idx1];
-	assign Dis_V1 = val[Dis_ROB_idx1];
+	assign Dis_V1 = Dis_R1 ? val[Dis_ROB_idx1] : 0;
 	assign Dis_R2 = Dis_flag2 && ready[Dis_ROB_idx2];
-	assign Dis_V2 = val[Dis_ROB_idx2];
+	assign Dis_V2 = Dis_R2 ? val[Dis_ROB_idx2] : 0;
 
 	// wire [5:0] head_op = op[head];
 	// wire head_ready = ready[head];
@@ -184,7 +184,7 @@ module ROB (
 				LSB_from_LSB_flag <= `FALSE;
 			end
 			if ((!empty) && ready[head]) begin
-				cnti <= cnti + 1;
+				// cnti <= cnti + 1;
 				head <= head + 1;
 				// $fdisplay(logfile, "clk: %d; commit: %h %h; %d <- %d %d %h", cnti, PC[head], op[head], dest[head], $signed(val[head]),jump_flag[head],jump_PC[head]);
 				// $fdisplay(logfile, "%d %h", cnti, PC[head]);

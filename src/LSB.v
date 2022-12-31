@@ -42,7 +42,7 @@ module LSB (
 );
 
 	reg 						busy[`LSB_INDEX];
-	reg [4:0]					busy_cnt;
+	integer						busy_cnt;
 	reg	[`LSB_INDEX_RANGE]		head;
 	reg	[`LSB_INDEX_RANGE]		tail;
 	reg	[5:0]					op[`LSB_INDEX];
@@ -67,7 +67,7 @@ module LSB (
 	// wire pchead = PC[head];
 	reg 						commit[`LSB_INDEX];
 	// wire commithead = commit[head];
-	reg [4:0]					commit_cnt;
+	integer						commit_cnt;
 
 	wire head_store  = (op[head] == `SB || op[head] == `SH || op[head] == `SW);
 	wire head_commit = (busy_cnt>0 && busy[head] && head_store && MC_flag_in);
