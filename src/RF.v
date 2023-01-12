@@ -2,13 +2,13 @@
 
 module RF (
 	input  wire							clk,
-	input  wire 						rst,
-	input  wire 						rdy,
-	input  wire 						roll,
+	input  wire							rst,
+	input  wire							rdy,
+	input  wire							roll,
 //decoder
 	input  wire 						Dec_R1,
 	input  wire	[`REG_INDEX_RANGE] 		Dec_rs1,
-	input  wire 						Dec_R2,
+	input  wire							Dec_R2,
 	input  wire	[`REG_INDEX_RANGE] 		Dec_rs2,
 //dispatch
 	input  wire							Dis_flag,
@@ -38,6 +38,8 @@ module RF (
 	always @(*) begin
 		if (Dec_R1 == `FALSE) begin
 			Dis_flag1 = `FALSE;
+			Dis_R1    = 0;
+			Dis_V1    = 0;
 		end else begin
 			Dis_flag1 = `TRUE;
 			if (ready[Dec_rs1] == `TRUE) begin
@@ -56,6 +58,8 @@ module RF (
 	always @(*) begin
 		if (Dec_R2 == `FALSE) begin
 			Dis_flag2 = `FALSE;
+			Dis_R2    = 0;
+			Dis_V2    = 0;
 		end else begin
 			Dis_flag2 = `TRUE;
 			if (ready[Dec_rs2] == `TRUE) begin

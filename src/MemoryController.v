@@ -162,20 +162,22 @@ module MemoryController (
 			end else begin
 				if (LSB_flag) begin
 					if (stall == 2'b11) begin
-						stall      <= 0;
-						work       <= `TRUE;
-						belong     <= 0;
-						is_store   <= LSB_type;
-						addr       <= LSB_addr;
-						len        <= LSB_len;
-						store_val  <= LSB_data;
-						LSB_step   <= 0;
-						data       <= 0;
-						mem_wr     <= LSB_type;
-						mem_a      <= LSB_addr;
-						mem_dout   <= LSB_data[7:0];
-						IC_commit  <= `FALSE;
-						LSB_commit <= `FALSE;
+						if (!LSB_type || LSB_addr[17:16] != 2'b11 || ~io_buffer_full) begin
+							stall      <= 0;
+							work       <= `TRUE;
+							belong     <= 0;
+							is_store   <= LSB_type;
+							addr       <= LSB_addr;
+							len        <= LSB_len;
+							store_val  <= LSB_data;
+							LSB_step   <= 0;
+							data       <= 0;
+							mem_wr     <= LSB_type;
+							mem_a      <= LSB_addr;
+							mem_dout   <= LSB_data[7:0];
+							IC_commit  <= `FALSE;
+							LSB_commit <= `FALSE;
+						end
 					end else begin
 						stall      <= stall + 1;
 						IC_commit  <= `FALSE;

@@ -42,6 +42,7 @@ module decoder (
 		Dis_rd = 0;
 		Dis_imm = 0;
 		Dis_op = 0;
+		Dis_PC = 0;
 		if (IQ_flag && !RS_full && !ROB_full && !LSB_full) begin
 			Dis_PC = IQ_PC;
 			case (IQ_inst[6:0])
