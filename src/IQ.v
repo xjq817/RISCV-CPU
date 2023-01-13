@@ -1,25 +1,25 @@
 `include "define.v"
 
 module IQ (
-	input  wire					clk,
-	input  wire					rst,  
-	input  wire 				rdy,
-	input  wire 				roll,
+    input  wire                   clk,
+    input  wire                   rst,  
+    input  wire                   rdy,
+    input  wire                   roll,
 //IF
-	input  wire					IF_flag,
-	input  wire	[31:0]			IF_inst,
-	input  wire	[31:0]			IF_PC,
-	input  wire [31:0]			IF_BTB_PC,
-	input  wire 				IF_BTB_predict,
+    input  wire                   IF_flag,
+    input  wire [31:0]            IF_inst,
+    input  wire [31:0]            IF_PC,
+    input  wire [31:0]            IF_BTB_PC,
+    input  wire                   IF_BTB_predict,
 //decoder
-	input  wire					Dec_flag,
-	output reg					Dec_commit,
-	output reg	[31:0]			Dec_inst,
-	output reg	[31:0]			Dec_PC,
-	output reg	[31:0]			Dec_BTB_PC,
-	output reg					Dec_BTB_predict,
+    input  wire                   Dec_flag,
+    output reg                    Dec_commit,
+    output reg  [31:0]            Dec_inst,
+    output reg  [31:0]            Dec_PC,
+    output reg  [31:0]            Dec_BTB_PC,
+    output reg                    Dec_BTB_predict,
 //IQ
-	output reg					IQ_full
+    output reg                    IQ_full
 );
 
 	reg	[31:0]					inst[`IQ_INDEX];

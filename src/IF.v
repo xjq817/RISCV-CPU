@@ -1,26 +1,26 @@
 `include "define.v"
 
 module IF (
-	input  wire				clk,
-	input  wire 			rst,
-	input  wire 			rdy,
+    input  wire               clk,
+    input  wire               rst,
+    input  wire               rdy,
 //ICache
-	input  wire 			IC_commit,
-	input  wire	[31:0]		IC_val,
-	output reg	 			IC_flag,
-	output reg	[31:0]		IC_PC,
+    input  wire               IC_commit,
+    input  wire [31:0]        IC_val,
+    output reg                IC_flag,
+    output reg  [31:0]        IC_PC,
 //IQ
-	input  wire				IQ_full,
-	output reg				IQ_flag,
-	output reg	[31:0]		IQ_inst,
-	output reg	[31:0]		IQ_PC,
-	output reg	[31:0]		IQ_BTB_PC,
-	output reg				IQ_BTB_predict,
+    input  wire               IQ_full,
+    output reg                IQ_flag,
+    output reg  [31:0]        IQ_inst,
+    output reg  [31:0]        IQ_PC,
+    output reg  [31:0]        IQ_BTB_PC,
+    output reg                IQ_BTB_predict,
 //ROB
-	input  wire				ROB_jump_flag,
-	input  wire	[31:0]		ROB_jump_PC,
-	input  wire				ROB_BTB_flag,
-	input  wire	[31:0]		ROB_BTB_PC
+    input  wire               ROB_jump_flag,
+    input  wire [31:0]        ROB_jump_PC,
+    input  wire               ROB_BTB_flag,
+    input  wire [31:0]        ROB_BTB_PC
 );
 
 	reg			stall;

@@ -1,30 +1,30 @@
 `include "define.v"
 
 module RF (
-	input  wire							clk,
-	input  wire							rst,
-	input  wire							rdy,
-	input  wire							roll,
+    input  wire                           clk,
+    input  wire                           rst,
+    input  wire                           rdy,
+    input  wire                           roll,
 //decoder
-	input  wire 						Dec_R1,
-	input  wire	[`REG_INDEX_RANGE] 		Dec_rs1,
-	input  wire							Dec_R2,
-	input  wire	[`REG_INDEX_RANGE] 		Dec_rs2,
+    input  wire                           Dec_R1,
+    input  wire [`REG_INDEX_RANGE]        Dec_rs1,
+    input  wire                           Dec_R2,
+    input  wire [`REG_INDEX_RANGE]        Dec_rs2,
 //dispatch
-	input  wire							Dis_flag,
-	input  wire	[`REG_INDEX_RANGE]		Dis_rd,
-	input  wire	[`ROB_INDEX_RANGE]		Dis_ROB_idx,
-	output reg							Dis_flag1,
-	output reg							Dis_R1,
-	output reg	[31:0] 					Dis_V1,
-	output reg							Dis_flag2,
-	output reg							Dis_R2,
-	output reg	[31:0]					Dis_V2,
+    input  wire                           Dis_flag,
+    input  wire [`REG_INDEX_RANGE]        Dis_rd,
+    input  wire [`ROB_INDEX_RANGE]        Dis_ROB_idx,
+    output reg                            Dis_flag1,
+    output reg                            Dis_R1,
+    output reg  [31:0]                    Dis_V1,
+    output reg                            Dis_flag2,
+    output reg                            Dis_R2,
+    output reg  [31:0]                    Dis_V2,
 //ROB
-	input  wire							ROB_flag,
-	input  wire	[`ROB_INDEX_RANGE]		ROB_new_idx,
-	input  wire	[`REG_INDEX_RANGE] 		ROB_rd,
-	input  wire	[31:0]					ROB_val
+    input  wire                           ROB_flag,
+    input  wire [`ROB_INDEX_RANGE]        ROB_new_idx,
+    input  wire [`REG_INDEX_RANGE]        ROB_rd,
+    input  wire [31:0]                    ROB_val
 );
 
 	reg	[31:0]					val[`REG_INDEX];

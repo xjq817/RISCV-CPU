@@ -1,20 +1,20 @@
 `include "define.v"
 
 module ICache (
-	input  wire					clk,
-	input  wire					rst,
-	input  wire					rdy,
-	input  wire					roll,
+    input  wire                   clk,
+    input  wire                   rst,
+    input  wire                   rdy,
+    input  wire                   roll,
 //IF
-	input  wire					IF_flag,
-	input  wire	[31:0]			IF_PC,
-	output reg 					IF_commit,
-	output reg	[31:0]			IF_inst,
+    input  wire                   IF_flag,
+    input  wire [31:0]            IF_PC,
+    output reg                    IF_commit,
+    output reg  [31:0]            IF_inst,
 //MemoryController
-	input  wire					MC_flag,
-	input  wire [31:0]			MC_inst,
-	output reg					MC_commit,
-	output reg	[31:0]			MC_PC
+    input  wire                   MC_flag,
+    input  wire [31:0]            MC_inst,
+    output reg                    MC_commit,
+    output reg  [31:0]            MC_PC
 );
 
 	reg						stall;

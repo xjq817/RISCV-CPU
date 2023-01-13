@@ -2,31 +2,31 @@
 
 module decoder (
 //IQ
-	input  wire							IQ_flag,
-	input  wire	[31:0]					IQ_inst,
-	input  wire	[31:0]					IQ_PC,
-	input  wire	[31:0]					IQ_BTB_PC,
-	input  wire							IQ_BTB_predict,
+    input  wire                         IQ_flag,
+    input  wire [31:0]                  IQ_inst,
+    input  wire [31:0]                  IQ_PC,
+    input  wire [31:0]                  IQ_BTB_PC,
+    input  wire                         IQ_BTB_predict,
 //RF
-	output reg  						RF_R1,
-	output reg	[`REG_INDEX_RANGE] 		RF_rs1,
-	output reg  						RF_R2,
-	output reg	[`REG_INDEX_RANGE] 		RF_rs2,
+    output reg                          RF_R1,
+    output reg  [`REG_INDEX_RANGE]      RF_rs1,
+    output reg                          RF_R2,
+    output reg  [`REG_INDEX_RANGE]      RF_rs2,
 //dispatch
-	output reg	[5:0]					Dis_op,
-	output reg	[`REG_INDEX_RANGE]		Dis_rd,
-	output reg	[31:0]					Dis_imm,
-	output reg	[31:0]					Dis_PC,
-	output wire	[31:0]					Dis_BTB_PC,
-	output wire							Dis_BTB_predict,
+    output reg  [5:0]                   Dis_op,
+    output reg  [`REG_INDEX_RANGE]      Dis_rd,
+    output reg  [31:0]                  Dis_imm,
+    output reg  [31:0]                  Dis_PC,
+    output wire [31:0]                  Dis_BTB_PC,
+    output wire                         Dis_BTB_predict,
 //RS
-	input  wire							RS_full,
+    input  wire                         RS_full,
 //LSB
-	input  wire 						LSB_full,
+    input  wire                         LSB_full,
 //ROB
-	input  wire							ROB_full,
+    input  wire                         ROB_full,
 //decoder
-	output wire							Dec_flag
+    output wire                         Dec_flag
 );
 
 	assign Dec_flag = IQ_flag && !RS_full && !ROB_full && !LSB_full;

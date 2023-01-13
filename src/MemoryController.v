@@ -1,28 +1,28 @@
 `include "define.v"
 
 module MemoryController (
-	input  wire					clk,
-	input  wire					rst,
-	input  wire					rdy,
-	input  wire					roll,
-	input  wire					io_buffer_full,
-	input  wire [7:0]			mem_din,
-	output reg  [7:0]			mem_dout,
-	output reg  [31:0]			mem_a,
-	output reg					mem_wr,
+    input  wire                 clk,
+    input  wire                 rst,
+    input  wire                 rdy,
+    input  wire                 roll,
+    input  wire                 io_buffer_full,
+    input  wire [7:0]           mem_din,
+    output reg  [7:0]           mem_dout,
+    output reg  [31:0]          mem_a,
+    output reg                  mem_wr,
 //ICache
-	input  wire					IC_flag,
-	input  wire [31:0]			IC_addr,
-	output reg					IC_commit,
-	output reg	[31:0]			IC_data,
+    input  wire                 IC_flag,
+    input  wire [31:0]          IC_addr,
+    output reg                  IC_commit,
+    output reg  [31:0]          IC_data,
 //LSB
-	input  wire					LSB_flag,
-	input  wire					LSB_type,
-	input  wire	[31:0]			LSB_addr,
-	input  wire	[2:0]			LSB_len,
-	input  wire [31:0]			LSB_data,
-	output reg					LSB_commit,
-	output reg	[31:0]			LSB_val
+    input  wire                 LSB_flag,
+    input  wire                 LSB_type,
+    input  wire [31:0]          LSB_addr,
+    input  wire [2:0]           LSB_len,
+    input  wire [31:0]          LSB_data,
+    output reg                  LSB_commit,
+    output reg  [31:0]          LSB_val
 );
 
 	reg [1:0] 		stall;
