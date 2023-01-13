@@ -3,10 +3,10 @@
 module alu (
 	input  wire							clk,
 	input  wire							rst,
-	input  wire 						rdy,
+	input  wire							rdy,
 	input  wire							roll,
 //RS
-	input  wire 						RS_flag,
+	input  wire							RS_flag,
 	input  wire	[5:0]					RS_op,
 	input  wire	[31:0]					RS_Vj,
 	input  wire	[31:0]					RS_Vk,
@@ -14,10 +14,10 @@ module alu (
 	input  wire	[31:0]					RS_imm,
 	input  wire	[31:0]					RS_PC,
 //alu
-	output reg  						ALU_flag,
+	output reg							ALU_flag,
 	output reg	[`ROB_INDEX_RANGE]		ALU_ROB_idx,
 	output reg	[31:0]					ALU_val,
-	output reg	 						ALU_jump_flag,
+	output reg							ALU_jump_flag,
 	output reg	[31:0]					ALU_jump_PC
 );
 

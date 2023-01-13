@@ -32,7 +32,7 @@ module MemoryController (
 	reg	[31:0]		addr;
 	reg [2:0]		len;
 	reg [31:0]		store_val;
-	reg [2:0]		LSB_step;
+	reg [2:0]		step;
 	reg [31:0]		data;
 
 	always @(posedge clk) begin
@@ -47,7 +47,7 @@ module MemoryController (
 			mem_a      <= 0;
 		end else if (roll) begin
 			if (work && is_store) begin
-				if (LSB_step == len - 3'b001) begin
+				if (step == len - 3'b001) begin
 					IC_commit  <= `FALSE;
 					LSB_commit <= `TRUE;
 					work       <= `FALSE;
@@ -57,8 +57,8 @@ module MemoryController (
 					LSB_commit <= `FALSE;
 					IC_commit  <= `FALSE;
 					mem_wr     <= 1;
-					LSB_step   <= LSB_step + 3'b001;
-					case (LSB_step)
+					step       <= step + 3'b001;
+					case (step)
 						3'b000: begin
 							mem_dout <= store_val[15:8];
 							mem_a    <= addr + 3'b001;
@@ -91,7 +91,7 @@ module MemoryController (
 		end else begin
 			if (work) begin
 				if (!is_store) begin
-					if (LSB_step == len + 1) begin
+					if (step == len + 1) begin
 						if (belong == 0) begin
 							LSB_commit <= `TRUE;
 							LSB_val    <= data;
@@ -108,8 +108,8 @@ module MemoryController (
 						LSB_commit <= `FALSE;
 						IC_commit  <= `FALSE;
 						mem_wr     <= 0;
-						LSB_step   <= LSB_step + 3'b001;
-						case (LSB_step)
+						step       <= step + 3'b001;
+						case (step)
 							3'b000: begin
 								mem_a <= addr + 3'b001;
 							end
@@ -132,7 +132,7 @@ module MemoryController (
 						endcase
 					end
 				end else begin
-					if (LSB_step == len - 3'b001) begin
+					if (step == len - 3'b001) begin
 						IC_commit  <= `FALSE;
 						LSB_commit <= `TRUE;
 						work       <= `FALSE;
@@ -142,8 +142,8 @@ module MemoryController (
 						LSB_commit <= `FALSE;
 						IC_commit  <= `FALSE;
 						mem_wr     <= 1;
-						LSB_step   <= LSB_step + 3'b001;
-						case (LSB_step)
+						step   <= step + 3'b001;
+						case (step)
 							3'b000: begin
 								mem_dout <= store_val[15:8];
 								mem_a    <= addr + 3'b001;
@@ -170,7 +170,7 @@ module MemoryController (
 							addr       <= LSB_addr;
 							len        <= LSB_len;
 							store_val  <= LSB_data;
-							LSB_step   <= 0;
+							step       <= 0;
 							data       <= 0;
 							mem_wr     <= LSB_type;
 							mem_a      <= LSB_addr;
@@ -194,7 +194,7 @@ module MemoryController (
 						is_store   <= 0;
 						addr       <= IC_addr;
 						len        <= 3'b100;
-						LSB_step   <= 0;
+						step       <= 0;
 						data       <= 0;
 						mem_wr     <= 0;
 						mem_a      <= IC_addr;

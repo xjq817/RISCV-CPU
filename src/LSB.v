@@ -46,31 +46,20 @@ module LSB (
 	reg	[`LSB_INDEX_RANGE]		head;
 	reg	[`LSB_INDEX_RANGE]		tail;
 	reg	[5:0]					op[`LSB_INDEX];
-	// wire ophead = op[head];
 	reg							Rj[`LSB_INDEX];
-	// wire rjhead = Rj[head];
 	reg							Rk[`LSB_INDEX];
-	// wire rkhead = Rk[head];
 	reg	[`ROB_INDEX_RANGE]		Qj[`LSB_INDEX];
-	// wire qjhead = Qj[head];
 	reg	[`ROB_INDEX_RANGE]		Qk[`LSB_INDEX];
-	// wire qkhead = Qk[head];
 	reg	[31:0]					Vj[`LSB_INDEX];
-	// wire vjhead = Vj[head];
 	reg	[31:0]					Vk[`LSB_INDEX];
-	// wire vkhead = Vk[head];
 	reg	[31:0]					imm[`LSB_INDEX];
-	// wire immhead = imm[head];
 	reg	[`ROB_INDEX_RANGE]		ROB_idx[`LSB_INDEX];
-	// wire robidxhead = ROB_idx[head];
 	reg	[31:0]					PC[`LSB_INDEX];
-	// wire pchead = PC[head];
 	reg 						commit[`LSB_INDEX];
-	// wire commithead = commit[head];
 	integer						commit_cnt;
 
 	wire head_store  = (op[head] == `SB || op[head] == `SH || op[head] == `SW);
-	wire head_commit = (busy_cnt>0 && busy[head] && head_store && MC_flag_in);
+	wire head_commit = (busy_cnt > 0 && busy[head] && head_store && MC_flag_in);
 
 	wire [31:0] load_addr = Vj[head] + imm[head];
 	wire        io_first  = (load_addr[17:16]==3 && ROB_head_flag && ROB_idx[head] == ROB_head);
